@@ -1,0 +1,23 @@
+sudo: required
+services:
+ - docker
+
+ before_install:
+  - docker build -t icaromagnago/react-test -f ./client/Dockerfile.dev ./client
+
+  script:
+    - docker run -e CI=true icaromagnago/react-test npm test
+
+  after_success:
+    - docker build -t icaromagnago/multi-client ./client
+    - docker build -t icaromagnago/multi-nginx ./nginx
+    - docker build -t icaromagnago/multi-server ./server
+    - docker build -t icaromagnago/multi-worker ./worker
+
+    # Log in to the docker CLI
+    - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+    # push images to docker hub
+    - docker push icaromagnago/multi-client
+    - docker push icaromagnago/multi-nginx
+    - docker push icaromagnago/multi-server
+    - docker push icaromagnago/multi-worker
